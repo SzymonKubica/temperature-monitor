@@ -1,16 +1,20 @@
 use core::str::from_utf8;
 
 use arduino_hal::{Delay, I2c};
-use lcd_lcm1602_i2c::{Lcd, Backlight};
+use lcd_lcm1602_i2c::{Backlight, Lcd};
 use numtoa::NumToA;
 
 pub struct Display<'a> {
     lcd: Lcd<'a, I2c, Delay>,
+    is_backlight_on: bool,
 }
 
 impl<'a> Display<'a> {
     pub fn new(lcd: Lcd<'a, I2c, Delay>) -> Self {
-        Self { lcd }
+        Self {
+            lcd,
+            is_backlight_on: false,
+        }
     }
 
     pub fn print_temperature(&mut self, measurement: i16) {
@@ -32,17 +36,35 @@ impl<'a> Display<'a> {
             Err(_) => self.lcd.write_str("UTF8 Error").unwrap(),
         }
     }
+
     pub fn clear(&mut self) {
         self.lcd.clear().unwrap();
     }
+
+    pub fn write_str(&mut self, text: &str) {
+        self.lcd.write_str(text).unwrap();
+    }
+
     pub fn new_line(&mut self) {
         self.lcd.set_cursor(1, 0).unwrap();
     }
-    pub fn backlightOn(&mut self) {
+
+    pub fn set_backlight_on(&mut self) {
+        self.is_backlight_on = true;
         self.lcd.backlight(Backlight::On).unwrap();
     }
-    pub fn backlightOff(&mut self) {
+
+    pub fn set_backlight_off(&mut self) {
+        self.is_backlight_on = false;
         self.lcd.backlight(Backlight::Off).unwrap();
+    }
+
+    pub fn toggle_backlight(&mut self) {
+        if self.is_backlight_on {
+            self.set_backlight_off();
+        } else {
+            self.set_backlight_on();
+        }
     }
 }
 
