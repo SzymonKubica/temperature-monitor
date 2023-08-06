@@ -62,7 +62,6 @@ fn main() -> ! {
         // Wait so that the DHT sensor has some time to start.
         arduino_hal::delay_ms(1000);
         display.clear();
-        display.write_str("Test");
         loop {
             let measurement_result = dht11.perform_measurement(&mut delay2);
             if let Ok(measurement) = measurement_result {
