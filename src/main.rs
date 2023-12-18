@@ -27,7 +27,6 @@ fn main() -> ! {
         let peripherals = arduino_hal::Peripherals::take().unwrap();
         let pins = arduino_hal::pins!(peripherals);
 
-        let pin = pins.a3.into_opendrain_high();
 
         const LCD_ADDRESS: u8 = 0x27; // Address depends on hardware, see link below
 
@@ -54,19 +53,21 @@ fn main() -> ! {
                 .unwrap(),
         );
 
-        let mut dht11 = Dht11::new(pin);
+        let dht_pin = pins.a3.into_opendrain_high();
+        let mut dht11 = Dht11::new(dht_pin);
+        // Wait so that the DHT sensor has some time to start.
+        arduino_hal::delay_ms(1000);
 
         let mut temperature: i16 = 0;
         let mut humidity: u16 = 0;
 
-        // Wait so that the DHT sensor has some time to start.
-        arduino_hal::delay_ms(1000);
         display.clear();
         loop {
             let measurement_result = dht11.perform_measurement(&mut delay2);
             if let Ok(measurement) = measurement_result {
                 let new_temperature = measurement.temperature;
                 let new_humidity = measurement.humidity;
+                // Only redraw the screen if either value has changed.
                 if new_temperature != temperature || new_humidity != humidity {
                     temperature = new_temperature;
                     humidity = new_humidity;
